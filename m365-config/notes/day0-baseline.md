@@ -10,7 +10,7 @@
 - Standard users: User1, User2 (licensed)
 - Break-glass: BG1, BG2 (unlicensed)
 
-## Entra Groups (already created)
+## Entra Groups
 - GG-Admins
 - GG-CA-Exclusions-BreakGlass
 - GG-Users-Standard
