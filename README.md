@@ -1,1 +1,154 @@
-# modern-secure-m365-lab
+# Modern Secure M365 Lab (Tenant Security Baseline + Azure Automation Ops)
+
+Personal portfolio lab demonstrating **Microsoft 365 security hardening** + **cloud automation** with a real “ops” workflow:
+- Secure tenant baseline (Entra ID, Intune, Exchange/Defender, Purview)
+- Azure Automation platform deployed via **Bicep**
+- Scheduled **Microsoft Graph + PowerShell** reporting
+- Configuration drift capture + diff using **Microsoft365DSC**
+- Incident runbooks + RCA template (what you’d actually use in production)
+
+> Goal: show I can secure identities/endpoints/data in M365 **and** operationalize it with repeatable automation and evidence.
+
+---
+
+## What you’ll find in this repo
+
+### 1) Secure Microsoft 365 baseline (the “control layer”)
+**Entra ID (Identity & Access)**
+- Conditional Access policy set + scoping model (MFA, legacy auth blocking, device-based access)
+- Admin role matrix + break-glass approach
+- Sign-in log validation screenshots
+
+**Intune (Endpoint posture)**
+- Enrollment + baseline config posture documentation
+- Device status evidence + compliance-related proof points
+
+**Exchange / Defender**
+- Mail flow / anti-spam validation and “what happens when a message is flagged”
+- Example transport rule evidence (guardrail pattern)
+
+**Purview**
+- Information protection / labeling proof
+- DLP policy setup evidence
+
+These are documented in: `m365-config/` (the “configuration notes as code” layer).
+
+---
+
+### 2) Azure automation platform (the “ops layer”)
+Infrastructure deployed via `infra-bicep/`:
+- Automation Account (Managed Identity)
+- Log Analytics workspace
+- Storage account (report artifacts)
+- Key Vault (optional)
+
+This enables scheduled, credentialless automation using **Managed Identity + Graph** (no stored secrets).
+
+---
+
+### 3) Reporting + drift detection (the “evidence engine”)
+This repo includes two automation styles:
+
+**Hygiene suite (local/one-shot)**
+- Generates baseline CSV reports you can commit (or keep local if sensitive)
+
+**Runbook-style reporting (Azure Automation)**
+- Graph queries + CSV output + optional Log Analytics summary events
+- Example reports: Conditional Access inventory, sign-in failures, MFA registration inventory
+
+**Drift detection**
+- Microsoft365DSC export (“golden snapshot”)
+- Hash-based diff report between baseline vs current
+
+---
+
+## Repo map (where to look first)
+
+### `m365-config/` (security baseline documentation)
+- `notes/day0-baseline.md` — tenant setup assumptions
+- `ca/ca-policies.md` — Conditional Access policy design + scope
+- `intune/intune-baseline.md` — enrollment/compliance/baseline posture notes
+- `exchange/email-auth-plan.md` — SPF/DKIM/DMARC plan + mail security notes
+- `teams-sharepoint/governance.md` — governance + sharing model
+- `purview/purview-mini-sprint.md` — labels + DLP mini-sprint
+- `dsc/README.md` — how DSC exports/drift are used
+
+### `infra-bicep/` (IaC)
+- `main.bicep`, `main.parameters.json`
+
+### `scripts/` (automation)
+**Bootstrap**
+- `bootstrap/Grant-GraphAppRoles-To-AutomationMI.ps1` — assigns Graph app roles to the Automation Managed Identity
+
+**Hygiene (local reports)**
+- `hygiene/Invoke-HygieneSuite.ps1` — runs exports below into `evidence/reports/`
+  - privileged role assignments
+  - guest users
+  - license summary
+  - MFA registration
+  - Conditional Access policies (export)
+
+**Reporting (runbook-style)**
+- `_RunbookTemplate.ps1` — standardized logging/auth wrapper
+- `Get-ConditionalAccessInventory.ps1`
+- `Get-SignInFailures.ps1`
+- ` Get-MFARegInventor.ps1` *(note: leading space in filename — recommended rename)*
+
+**Drift**
+- `drift/Export-M365DSC.ps1` — writes to `evidence/exports/current` by default
+- `drift/Compare-M365DSC.ps1` — writes diff CSV into `evidence/reports/`
+
+---
+
+# Evidence (proof of work)
+
+This project is designed to produce repeatable artifacts for audits, troubleshooting, and demos.
+
+## `evidence/screenshots/` (current contents)
+Portal screenshots showing baseline configuration and validation.
+
+### `evidence/screenshots/Azure/`
+- Automation Account / runbooks / schedules
+- Runbook output logs
+- Azure Monitor queries
+- “dashboard-style” operational view
+
+### `evidence/screenshots/Entra/`
+- Users + groups scoping model
+- Conditional Access policy views
+- Sign-in log proof (applied policies)
+
+### `evidence/screenshots/Intune/`
+- Enrollment/device registration status
+- Device configuration/profile status
+- Policy assignment status
+
+### `evidence/screenshots/Exchange/`
+- Mail flow rule evidence (guardrail example)
+
+### `evidence/screenshots/Defender/`
+- Spam test / mail security validation proof
+
+### `evidence/screenshots/Purview/`
+- DLP policy configuration evidence
+- Information protection policy evidence
+
+---
+
+## `evidence/reports/` (generated outputs)
+> Not all reports are committed by default (they may contain tenant/user identifiers).  
+Generated by:
+- `scripts/hygiene/Invoke-HygieneSuite.ps1`
+- `scripts/reporting/*`
+- `scripts/drift/Compare-M365DSC.ps1`
+
+Typical examples you can generate:
+- `ConditionalAccessInventory_YYYYMMDD.csv`
+- `SignInFailures_Last7Days_YYYYMMDD.csv`
+- `MFARegistration_YYYYMMDD.csv`
+- `LicenseSummary_YYYYMMDD.csv`
+- `DSC_DriftReport_YYYYMMDD.csv`
+
+**How to generate locally**
+```powershell
+pwsh ./scripts/hygiene/Invoke-HygieneSuite.ps1
