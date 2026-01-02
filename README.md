@@ -1,14 +1,11 @@
 # Modern Secure M365 Lab (Tenant Security Baseline + Azure Automation Ops)
 
-Personal portfolio lab demonstrating **Microsoft 365 security hardening** + **cloud automation** with a real “ops” workflow:
+Personal portfolio lab demonstrating **Microsoft 365 security hardening** + **cloud automation**:
 - Secure tenant baseline (Entra ID, Intune, Exchange/Defender, Purview)
 - Azure Automation platform deployed via **Bicep**
 - Scheduled **Microsoft Graph + PowerShell** reporting
 - Configuration drift capture + diff using **Microsoft365DSC**
 - Incident runbooks + RCA template (what you’d actually use in production)
-
-> Goal: show I can secure identities/endpoints/data in M365 **and** operationalize it with repeatable automation and evidence.
-
 ---
 
 ## What you’ll find in this repo
@@ -149,6 +146,3 @@ Typical examples you can generate:
 - `LicenseSummary_YYYYMMDD.csv`
 - `DSC_DriftReport_YYYYMMDD.csv`
 
-**How to generate locally**
-```powershell
-pwsh ./scripts/hygiene/Invoke-HygieneSuite.ps1
